@@ -5,28 +5,29 @@ import pickle
 from datetime import datetime
 import matplotlib.pyplot as plt
 import yfinance as yf  # Yahoo Finance API
+import os
+import seaborn as sns
 
-# Load all three models with error handling
-model_files = {
-    "Logistic Regression": "logistic_regression_model.pkl",
-    "Support Vector Regression (SVR)": "svr_model.pkl",
-    "XGBoost Classifier": "xgboost_model.pkl",
-}
-
+# Load all models dynamically from the 'models' directory
+models_dir = "models"
 models = {}
-for name, file in model_files.items():
-    try:
-        with open(file, "rb") as f:
-            models[name] = pickle.load(f)
-        st.success(f"{name} model loaded successfully.")
-    except (pickle.UnpicklingError, FileNotFoundError, EOFError) as e:
-        st.error(f"Failed to load {name}: {e}")
 
 # Define expected features for each model
 EXPECTED_FEATURES = [
     "Open", "High", "Low", "Close", "Volume", 
     "Open_Close_Spread", "High_Low_Spread", "Quarter_End_Flag"
 ]
+
+# Load models from the 'models' directory
+for file_name in os.listdir(models_dir):
+    if file_name.endswith(".pkl"):
+        model_name = file_name.split(".pkl")[0]
+        try:
+            with open(os.path.join(models_dir, file_name), "rb") as f:
+                models[model_name] = pickle.load(f)
+            st.success(f"{model_name} model loaded successfully.")
+        except (pickle.UnpicklingError, FileNotFoundError, EOFError) as e:
+            st.error(f"Failed to load {model_name}: {e}")
 
 # Fixed stock ticker for Tesla
 ticker = "TSLA"
@@ -46,12 +47,7 @@ def preprocess_data(stock_data, input_date, selected_model_name):
     # Derived features
     stock_data["Open_Close_Spread"] = stock_data["Close"] - stock_data["Open"]
     stock_data["High_Low_Spread"] = stock_data["High"] - stock_data["Low"]
-    
-    # Add features
     stock_data["Quarter_End_Flag"] = stock_data["Date"].dt.month % 3 == 0
-    stock_data["MA_5"] = stock_data["Close"].rolling(window=5).mean()
-    stock_data["MA_10"] = stock_data["Close"].rolling(window=10).mean()
-    stock_data["Volatility"] = stock_data["Close"].rolling(window=10).std()
 
     # Drop NaN values introduced by rolling features
     stock_data.dropna(inplace=True)
@@ -80,9 +76,9 @@ def preprocess_data(stock_data, input_date, selected_model_name):
         return None
     
     # Extract features based on the selected model
-    if selected_model_name in ["Logistic Regression", "Support Vector Regression (SVR)", "XGBoost Classifier"]:
-        # Use only 'Open' and 'Close' features for all models
-        features = filtered_data[["Open", "Close"]].iloc[-1, :].values.reshape(1, -1)
+    if selected_model_name in models:
+        # Use 'Open', 'High', 'Low', 'Close', and other features for all models
+        features = filtered_data[["Open", "High", "Low", "Close", "Volume", "Open_Close_Spread", "High_Low_Spread", "Quarter_End_Flag"]].iloc[-1, :].values.reshape(1, -1)
     
     return features
 
