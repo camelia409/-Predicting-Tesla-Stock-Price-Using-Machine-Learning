@@ -1,8 +1,10 @@
 streamlit
-joblib
 pandas
 numpy
-scikit-learn
+joblib
+yfinance
 matplotlib
 seaborn
-yfinance
+scikit-learn
+xgboost
+requests
