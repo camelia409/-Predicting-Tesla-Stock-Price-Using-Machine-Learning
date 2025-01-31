@@ -3,6 +3,9 @@
 ## Overview
 This project aims to predict whether the closing price of Tesla stock will be higher the next day using historical stock data. It's a binary classification problem where machine learning models help predict a buy signal based on past stock price data.
 
+## Website link
+https://tesla-stock-price-prediction-project.streamlit.app/
+
 ## Data
 The dataset includes Tesla's daily stock prices from January 2010 to December 2017. Key features include:
 - **Open**: Opening price
